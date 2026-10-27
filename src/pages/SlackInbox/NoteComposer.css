@@ -15,6 +15,8 @@
   font: var(--fontWeightRegular) 14px/20px var(--fontFamily);
 }
 .note-composer__input::placeholder { color: var(--slateTextSubtle); }
+/* In the "Add a note" modal the text area starts at its full 5 lines. */
+.note-modal-scrim .note-composer:not(.note-composer--edit) .note-composer__input { min-height: 100px; }
 /* The collapsed "Add a note" Input uses the same placeholder colour as the open editor (Figma: slateTextSubtle). */
 .hot-rp-activity__compose .hot-field__control::placeholder { color: var(--slateTextSubtle); }
 
