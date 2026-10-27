@@ -4,6 +4,7 @@ import { ConversationsSidebar } from '../../patterns/ConversationsSidebar'
 import type { ConversationsSidebarItem, ConversationsSidebarView } from '../../patterns/ConversationsSidebar'
 import { channelViews, viewLibrary } from '../../patterns/ConversationsSidebar/data'
 import { sampleSections } from '../../patterns/ConversationsSidebar/sampleData'
+import { Switch } from '../../components/Switch'
 import { EmptyState } from '../../patterns/EmptyState'
 import { MainNav } from '../../patterns/MainNav'
 import { navSampleFooterItems, navSampleItems, navSampleUserMenu } from '../../patterns/MainNav/sampleData'
@@ -39,6 +40,8 @@ const sections = sampleSections(true).map((section) => ({
 export function SlackInboxPage() {
   const [value, setValue] = useState('slack1-mine')
   const [picked, setPicked] = useState<string>()
+  // Prototype only: makes note uploads fail so Retry, failure and Remove can be tried.
+  const [simulateFailures, setSimulateFailures] = useState(false)
 
   const [inboxId, viewKey] = value.split('-') as [string, string]
   const inbox = slackInboxes.find((i) => i.id === inboxId)
@@ -48,11 +51,14 @@ export function SlackInboxPage() {
 
   return (
     <div className="slack-inbox-page">
+      <div className="prototype-controls">
+        <Switch checked={simulateFailures} onChange={(e) => setSimulateFailures(e.target.checked)} label="Simulate upload failures" />
+      </div>
       <PageLayout
         variant="home"
         nav={<MainNav items={navSampleItems} footerItems={navSampleFooterItems} value="conversations" user={{ initial: 'M', name: 'Mark Scout' }} userMenu={navSampleUserMenu} />}
         sidebar={<ConversationsSidebar sections={sections} value={value} onChange={(id) => { setValue(id); setPicked(undefined) }} />}
-        rightPanel={inbox ? <SlackRightPanel key={conversation?.id ?? value} inboxName={inbox.name} c={conversation} /> : undefined}
+        rightPanel={inbox ? <SlackRightPanel key={conversation?.id ?? value} inboxName={inbox.name} c={conversation} simulateFailures={simulateFailures} /> : undefined}
       >
         {inbox ? (
           <div className="slack-inbox-page__work">

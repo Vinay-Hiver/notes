@@ -26,6 +26,23 @@
   background: var(--slateSurfaceSubtle);
 }
 .note-composer__file img { display: block; }
+
+/* Uploading: the icon is faded and a thin bar along the bottom fills with the progress. */
+.note-composer__file--uploading .note-composer__file-icon { opacity: 0.5; }
+.note-composer__progress {
+  position: absolute; left: 3px; right: 3px; bottom: 2px; height: 3px;
+  border-radius: 2px; overflow: hidden; background: var(--slateSurfaceDisabled);
+}
+.note-composer__progress span { display: block; height: 100%; background: var(--primarySurfaceDefault); transition: width 100ms linear; }
+
+/* Failed: a red outline on the tile; Retry lives in the error row below the files, × still removes. */
+.note-composer__file--failed { background: var(--errorSurfaceSubtle); box-shadow: inset 0 0 0 1px var(--errorBorderDefault); }
+.note-composer__file--failed .note-composer__file-icon { opacity: 0.6; }
+
+.note-composer__error {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--errorTextBody); font: var(--fontWeightRegular) 12px/18px var(--fontFamily);
+}
 .note-composer__file:focus-visible { box-shadow: 0 0 0 2px var(--primaryBorderDefault); }
 /* The remove button shows only while that file is hovered or focused. */
 .note-composer__remove {
@@ -43,7 +60,20 @@
 .note-composer__attach-limit { display: inline-flex; border-radius: 6px; outline: 0; }
 .note-composer__attach-limit:focus-visible { box-shadow: 0 0 0 2px var(--primaryBorderDefault); }
 
-/* The modals (continue the note, file too large): a scrim behind the HOT Modal. */
+/* The files listed in the limit modal. */
+/* Figma: the sentence, then the files in a light box, then the Google Drive line. Up to 4 files show before it scrolls. */
+.note-limit-group { display: flex; flex-direction: column; gap: 8px; }
+.note-limit-group + .note-limit-group { margin-top: 12px; }
+.note-limit-intro { display: flex; flex-direction: column; gap: 4px; }
+.note-limit-list {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 0; padding: 12px 12px 12px 30px; max-height: 116px; overflow-y: auto; box-sizing: border-box;
+  background: var(--slateSurfaceSubtle); border: 0.5px solid var(--slateBorderMild); border-radius: 8px;
+}
+/* Body/Small */
+.note-limit-list li { color: var(--slateTextBody); font: var(--fontWeightRegular) 14px/20px var(--fontFamily); overflow-wrap: anywhere; }
+
+/* The modals (continue the note, files over a limit): a scrim behind the HOT Modal. */
 .note-modal-scrim {
   position: fixed; inset: 0; z-index: 100;
   display: flex; align-items: center; justify-content: center;

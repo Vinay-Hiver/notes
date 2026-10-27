@@ -9,7 +9,8 @@ import { sampleAssignees, samples } from '../../patterns/RightPanel/data'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { Modal, ModalText } from '../../components/Modal'
-import { MAX_FILES, MAX_FILE_BYTES } from './fileTypes'
+import { MAX_FILES, MAX_TOTAL_BYTES, fileLabel, formatSize } from './fileTypes'
+import { useNoteAttachments } from './useNoteAttachments'
 import { EmptyState } from '../../patterns/EmptyState'
 import { NoteCard } from './NoteCard'
 import { NoteComposer } from './NoteComposer'
@@ -38,7 +39,7 @@ function Row({ icon, label, children, link }: { icon: IconName; label: string; c
  * inbox name with Assignee, Status and Tags, then Customer details, Conversation details, Custom fields,
  * Previous Conversations and Activity & Notes. Custom fields and Previous Conversations start hidden.
  */
-export function SlackRightPanel({ inboxName, c }: { inboxName: string; c?: SlackConversation }) {
+export function SlackRightPanel({ inboxName, c, simulateFailures }: { inboxName: string; c?: SlackConversation; simulateFailures?: boolean }) {
   const [assignee, setAssignee] = useState('mark')
   const [status, setStatus] = useState<'open' | 'pending' | 'closed'>(c?.view === 'Closed' ? 'closed' : 'open')
   const [onlyNotes, setOnlyNotes] = useState(false)
@@ -56,22 +57,11 @@ export function SlackRightPanel({ inboxName, c }: { inboxName: string; c?: Slack
   const [composing, setComposing] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState('')
-  const [files, setFiles] = useState<NoteAttachment[]>([])
   const [notes, setNotes] = useState<SavedNote[]>([])
+  // The note's files: limits, upload progress, failure and retry. `rejected` drives the limit modal.
+  const { files, attach, retry, remove, clear, rejected, clearRejected } = useNoteAttachments(simulateFailures)
 
-  // Set when a picked file is over 1 MB; shows the size-limit modal.
-  const [tooBig, setTooBig] = useState(false)
-
-  const reset = () => { setComposing(false); setModalOpen(false); setDraft(''); setFiles([]) }
-  // Files over 1 MB are left out (and the modal explains why); the rest are added up to 5 in total.
-  const attach = (picked: File[]) => {
-    const ok = picked.filter((f) => f.size <= MAX_FILE_BYTES)
-    if (ok.length < picked.length) setTooBig(true)
-    setFiles((f) => [
-      ...f,
-      ...ok.slice(0, MAX_FILES - f.length).map((file, i) => ({ id: `${file.name}-${Date.now()}-${i}`, name: file.name, size: file.size, mime: file.type, url: URL.createObjectURL(file) })),
-    ])
-  }
+  const reset = () => { setComposing(false); setModalOpen(false); setDraft(''); clear() }
   const save = () => {
     setNotes((n) => [{ id: `note-${Date.now()}`, text: draft.trim(), attachments: files, time: nowTime() }, ...n])
     reset()
@@ -79,11 +69,16 @@ export function SlackRightPanel({ inboxName, c }: { inboxName: string; c?: Slack
   const composer = (expand?: () => void, growFrom?: number) => (
     <NoteComposer
       text={draft} onTextChange={setDraft} attachments={files}
-      onAttach={attach}
-      onRemoveAttachment={(id) => setFiles((f) => f.filter((x) => x.id !== id))}
+      onAttach={attach} onRemoveAttachment={remove} onRetryAttachment={retry}
       onCancel={reset} onSave={save} onExpand={expand} growFrom={growFrom}
     />
   )
+  // The limit modal names each file that wasn't added and the limit it would break (PRD R3).
+  const sizeOnly = rejected.length > 0 && rejected.every((r) => r.limit === 'size')
+  const countOnly = rejected.length > 0 && rejected.every((r) => r.limit === 'count')
+  const limitTitle = sizeOnly ? `Attachments exceed the ${formatSize(MAX_TOTAL_BYTES)} limit`
+    : countOnly ? `A note can hold up to ${MAX_FILES} files`
+    : rejected.length === 1 ? 'This file couldn’t be attached' : 'Some files couldn’t be attached'
 
   const noteEvents: ActivityEvent[] = notes.map((n) => ({
     id: n.id, icon: 'note', text: n.text || n.attachments[0]?.name || 'Note', time: n.time,
@@ -153,13 +148,31 @@ export function SlackRightPanel({ inboxName, c }: { inboxName: string; c?: Slack
         </div>
       )}
 
-      {tooBig && (
+      {rejected.length > 0 && (
         <div className="note-modal-scrim">
           <Modal
-            title="Attachment size exceeds the 1 MB limit" width={500}
-            actions={<><Button variant="secondary" size="sm" onClick={() => setTooBig(false)}>Cancel</Button><Button variant="primary" size="sm" onClick={() => setTooBig(false)}>Got it</Button></>}
+            title={limitTitle} width={500}
+            actions={<><Button variant="secondary" size="sm" onClick={clearRejected}>Cancel</Button><Button variant="primary" size="sm" onClick={clearRejected}>Got it</Button></>}
           >
-            <ModalText>Please upload file less than 1 MB.<br />For larger attachments, you can upload to Google Drive and link here.</ModalText>
+            <ModalText>
+              {/* One sentence per limit, then the files it applies to. Size lists the file sizes; count lists only names. */}
+              {(['size', 'count'] as const).map((limit) => {
+                const group = rejected.filter((r) => r.limit === limit)
+                if (!group.length) return null
+                const what = limit === 'size' ? `the ${formatSize(MAX_TOTAL_BYTES)} limit` : `the ${MAX_FILES}-file limit`
+                return (
+                  <div key={limit} className="note-limit-group">
+                    <div className="note-limit-intro">
+                      <span>{group.length === 1 ? 'This file will go over ' : 'These files will go over '}{what}:</span>
+                      <ul className="note-limit-list">
+                        {group.map((r, i) => <li key={`${r.name}-${i}`}>{limit === 'size' ? fileLabel(r.name, r.size, 40) : r.name}</li>)}
+                      </ul>
+                    </div>
+                    {limit === 'size' && <span>For larger attachments, you can upload to Google Drive and link here.</span>}
+                  </div>
+                )
+              })}
+            </ModalText>
           </Modal>
         </div>
       )}

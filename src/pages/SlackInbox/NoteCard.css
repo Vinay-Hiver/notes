@@ -10,10 +10,10 @@
 /* Body/Small */
 .note-card__text { color: var(--slateTextTitle); font: var(--fontWeightRegular) 14px/20px var(--fontFamily); white-space: pre-line; overflow-wrap: anywhere; }
 
-.note-card__files { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 8px; }
+.note-card__files { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
 .note-card__file {
   display: flex; align-items: center; justify-content: center;
-  width: 34px; height: 32px; box-sizing: border-box;
+  width: 32px; height: 32px; box-sizing: border-box;
   border: 1px solid var(--slateBorderLight); border-radius: 6px;
 }
 .note-card__file-icon { display: block; }

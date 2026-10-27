@@ -6,7 +6,12 @@ import { MAX_FILES, fileIcon, fileLabel } from './fileTypes'
 import './NoteComposer.css'
 
 /** An attached file. `url` is a local link to the file, used to download it from a saved note. */
-export type NoteAttachment = { id: string; name: string; size: number; mime: string; url: string }
+export type NoteAttachment = {
+  id: string; name: string; size: number; mime: string; url: string
+  /** Upload state in the editor (PRD R4). A saved note only holds files that are done. */
+  status: 'uploading' | 'done' | 'failed'
+  progress: number
+}
 
 type Props = {
   text: string
@@ -15,6 +20,8 @@ type Props = {
   /** Every file the person picked; the parent checks the size and the 5-file limit. */
   onAttach: (files: File[]) => void
   onRemoveAttachment: (id: string) => void
+  /** Uploads a failed file again. The error row's Retry calls it for every failed file. */
+  onRetryAttachment: (id: string) => void
   onCancel: () => void
   onSave: () => void
   /** Shows the "Open in new" button that continues the note in a modal. Left out inside the modal. */
@@ -30,11 +37,17 @@ type Props = {
  * Open in new, Emoji, Attach, Cancel and Add. Hovering a file shows its name and size and a button to remove it.
  * Not in the Storybook: the editor box and the attachment tile are built here from tokens, Button, Tooltip and Icon.
  */
-export function NoteComposer({ text, onTextChange, attachments, onAttach, onRemoveAttachment, onCancel, onSave, onExpand, growFrom, editing }: Props) {
+export function NoteComposer({ text, onTextChange, attachments, onAttach, onRemoveAttachment, onRetryAttachment, onCancel, onSave, onExpand, growFrom, editing }: Props) {
   const fileInput = useRef<HTMLInputElement>(null)
   const root = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
   const full = attachments.length >= MAX_FILES
+  const failedCount = editing ? 0 : attachments.filter((a) => a.status === 'failed').length
+  // The note can't be added while a file is uploading or has failed (PRD R4). Editing never shows files.
+  const blockedBy = editing ? undefined
+    : attachments.some((a) => a.status === 'failed') ? 'Retry or remove the files that failed to upload'
+    : attachments.some((a) => a.status === 'uploading') ? 'Wait for the files to finish uploading'
+    : undefined
 
   // The text area grows with the note up to 5 lines (max-height in the CSS), then scrolls.
   useLayoutEffect(() => {
@@ -68,16 +81,27 @@ export function NoteComposer({ text, onTextChange, attachments, onAttach, onRemo
       <div className="note-composer__bottom">
         {!editing && attachments.length > 0 && (
           <div className="note-composer__files">
-            {attachments.map((a) => (
-              <Tooltip key={a.id} content={fileLabel(a.name, a.size)} portal>
-                <div className="note-composer__file" tabIndex={0}>
-                  <img src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />
-                  <button type="button" className="note-composer__remove" aria-label={`Remove ${a.name}`} onClick={() => onRemoveAttachment(a.id)}>
-                    <Icon name="close" size={14} />
-                  </button>
-                </div>
-              </Tooltip>
-            ))}
+            {attachments.map((a) => {
+              const state = a.status === 'uploading' ? ` • Uploading ${Math.round(a.progress)}%` : a.status === 'failed' ? ' • Upload failed' : ''
+              return (
+                <Tooltip key={a.id} content={`${fileLabel(a.name, a.size)}${state}`} portal>
+                  <div className={`note-composer__file note-composer__file--${a.status}`} tabIndex={0}>
+                    <img className="note-composer__file-icon" src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />
+                    {a.status === 'uploading' && <span className="note-composer__progress" role="progressbar" aria-label={`Uploading ${a.name}`} aria-valuenow={Math.round(a.progress)}><span style={{ width: `${a.progress}%` }} /></span>}
+                    <button type="button" className="note-composer__remove" aria-label={`Remove ${a.name}`} onClick={() => onRemoveAttachment(a.id)}>
+                      <Icon name="close" size={14} />
+                    </button>
+                  </div>
+                </Tooltip>
+              )
+            })}
+          </div>
+        )}
+        {failedCount > 0 && (
+          <div className="note-composer__error" role="alert">
+            <Icon name="alerttriangle" size={14} />
+            <span>{failedCount === 1 ? '1 file failed to upload.' : `${failedCount} files failed to upload.`}</span>
+            <Button variant="ghost" size="xs" onClick={() => attachments.filter((a) => a.status === 'failed').forEach((a) => onRetryAttachment(a.id))}>Retry</Button>
           </div>
         )}
         <div className="note-composer__toolbar">
@@ -101,7 +125,16 @@ export function NoteComposer({ text, onTextChange, attachments, onAttach, onRemo
           />
           <span className="note-composer__spacer" />
           <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
-          <Button variant="primary" size="sm" onClick={onSave} disabled={!text.trim() && attachments.length === 0}>{editing ? 'Save' : 'Add'}</Button>
+          {blockedBy ? (
+            // A disabled button gets no hover, so the reason sits on a wrapper around it.
+            <Tooltip content={blockedBy} portal>
+              <span className="note-composer__attach-limit" tabIndex={0}>
+                <Button variant="primary" size="sm" disabled>Add</Button>
+              </span>
+            </Tooltip>
+          ) : (
+            <Button variant="primary" size="sm" onClick={onSave} disabled={!text.trim() && attachments.length === 0}>{editing ? 'Save' : 'Add'}</Button>
+          )}
         </div>
       </div>
     </div>
