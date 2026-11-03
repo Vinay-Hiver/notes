@@ -23,7 +23,7 @@ type Props = {
 
 /**
  * A saved note in Activity & Notes: the author, the text, the attached files and the time.
- * Hovering the note shows Edit and Delete in the Table's row-action pill; hovering a file shows a download button.
+ * Hovering the note shows Reply, Edit and Delete in the Table's row-action pill; hovering a file shows a download button.
  * Delete asks to confirm over the note. Edit swaps the note for an editor without the files (they can't change while editing).
  * Not in the Storybook; built from Avatar, Button, Tooltip, Icon, the Table row-action styles and tokens.
  */
@@ -62,6 +62,8 @@ export function NoteCard({ author, text, attachments, time, onSave, onDelete }: 
   }
 
   const actions: { icon: IconName; label: string; onClick: () => void }[] = [
+    // Reply has no flow in the prototype yet; it only shows in the pill.
+    { icon: 'reply', label: 'Reply', onClick: () => {} },
     { icon: 'edit', label: 'Edit', onClick: () => { setDraft(text); setMode('edit') } },
     { icon: 'delete', label: 'Delete', onClick: () => setMode('confirm') },
   ]

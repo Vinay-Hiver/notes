@@ -32,7 +32,7 @@
 .note-card__download-all:hover { text-decoration: underline; }
 .note-card__time { color: var(--slateTextSubtle); font: var(--fontWeightMedium) 13px/23.4px var(--fontFamily); }
 
-/* Edit and Delete: the Table's row-action pill, shown while the note is hovered. */
+/* Reply, Edit and Delete: the Table's row-action pill, shown while the note is hovered. */
 .note-card__actions { top: 4px; right: 4px; }
 .note-card:is(:hover, :focus-within) .note-card__actions { display: flex; }
 
