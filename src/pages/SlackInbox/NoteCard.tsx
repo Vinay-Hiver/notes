@@ -62,8 +62,6 @@ export function NoteCard({ author, text, attachments, time, onSave, onDelete }: 
   }
 
   const actions: { icon: IconName; label: string; onClick: () => void }[] = [
-    // Only a note with more than one file gets Download all, which saves them together as a ZIP.
-    ...(attachments.length > 1 ? [{ icon: 'download' as IconName, label: 'Download all', onClick: () => { void downloadAll(attachments) } }] : []),
     { icon: 'edit', label: 'Edit', onClick: () => { setDraft(text); setMode('edit') } },
     { icon: 'delete', label: 'Delete', onClick: () => setMode('confirm') },
   ]
@@ -83,6 +81,10 @@ export function NoteCard({ author, text, attachments, time, onSave, onDelete }: 
             </Tooltip>
           ))}
         </div>
+      )}
+      {/* Only a note with more than one file gets Download all, which saves them together as a ZIP. */}
+      {attachments.length > 1 && (
+        <button type="button" className="note-card__download-all" onClick={() => { void downloadAll(attachments) }}>Download all</button>
       )}
       <span className="note-card__time">{time}</span>
 

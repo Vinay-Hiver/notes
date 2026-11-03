@@ -13,16 +13,21 @@
 .note-card__files { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
 .note-card__file {
   display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; box-sizing: border-box;
-  border: 1px solid var(--slateBorderLight); border-radius: 6px;
+  width: 32px; height: 32px; box-sizing: border-box; border-radius: 6px;
 }
 .note-card__file-icon { display: block; }
 /* On hover the tile turns dark and shows the download icon instead of the file. */
 .note-card__file-download { display: none; color: var(--slateSurfaceWhite); }
-.note-card__file:hover, .note-card__file:focus-visible { background: var(--slateSurfaceDark500); border-color: var(--slateSurfaceDark500); }
+.note-card__file:hover, .note-card__file:focus-visible { background: var(--slateSurfaceDark500); }
 .note-card__file:hover .note-card__file-icon, .note-card__file:focus-visible .note-card__file-icon { display: none; }
 .note-card__file:hover .note-card__file-download, .note-card__file:focus-visible .note-card__file-download { display: flex; }
 
+/* 8px under the files (the card's 4px gap plus 4px). A text link that saves every file as one ZIP. No link component in the Storybook, so a plain button in the panel's link colour. */
+.note-card__download-all {
+  align-self: flex-start; margin-top: 4px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  color: var(--primarySurfaceDefault); font: var(--fontWeightMedium) 13px/20px var(--fontFamily);
+}
+.note-card__download-all:hover { text-decoration: underline; }
 .note-card__time { color: var(--slateTextSubtle); font: var(--fontWeightMedium) 13px/23.4px var(--fontFamily); }
 
 /* Edit and Delete: the Table's row-action pill, shown while the note is hovered. */
