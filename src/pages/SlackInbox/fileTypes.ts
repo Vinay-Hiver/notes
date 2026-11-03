@@ -14,10 +14,12 @@ import zip from '../../assets/file-icons/zip.svg'
 export const MAX_FILES = 10
 export const MAX_TOTAL_BYTES = 24 * 1024 * 1024
 
+const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+
 const byExtension: Record<string, string> = {
   pdf, doc, docx, txt, zip, rar, mp4, mov,
   ppt, pptx: ppt, xls, xlsx: xls, csv: xls,
-  jpg: image, jpeg: image, png: image, gif: image, webp: image, svg: image,
+  ...Object.fromEntries(imageExtensions.map((e) => [e, image])),
 }
 
 /** The 30×30 file-type icon for a file, by its extension and then its type. Unknown files use the text icon. */
@@ -27,6 +29,12 @@ export function fileIcon(name: string, mime = ''): string {
   if (mime.startsWith('image/')) return image
   if (mime.startsWith('video/')) return mp4
   return txt
+}
+
+/** Whether a file is an image, so its tile can show the picture itself instead of an icon. */
+export function isImage(name: string, mime = ''): boolean {
+  const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase() : ''
+  return mime.startsWith('image/') || imageExtensions.includes(ext)
 }
 
 /** A size the way the designs write it: "7 Bytes", "139 KB", "1.5 MB". */

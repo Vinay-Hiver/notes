@@ -28,6 +28,8 @@
   background: var(--slateSurfaceSubtle);
 }
 .note-composer__file img { display: block; }
+/* An image shows itself, filling the tile, instead of the file-type icon. */
+.note-composer__file-preview { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 
 /* Uploading: the icon is faded and a thin bar along the bottom fills with the progress. */
 .note-composer__file--uploading .note-composer__file-icon { opacity: 0.5; }

@@ -16,6 +16,8 @@
   width: 32px; height: 32px; box-sizing: border-box; border-radius: 6px;
 }
 .note-card__file-icon { display: block; }
+/* An image shows itself, filling the tile, instead of the file-type icon. */
+.note-card__file-preview { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 /* On hover the tile turns dark and shows the download icon instead of the file. */
 .note-card__file-download { display: none; color: var(--slateSurfaceWhite); }
 .note-card__file:hover, .note-card__file:focus-visible { background: var(--slateSurfaceDark500); }

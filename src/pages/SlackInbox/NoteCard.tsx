@@ -9,7 +9,7 @@ import type { IconName } from '../../icons/iconData'
 import { NoteComposer } from './NoteComposer'
 import type { NoteAttachment } from './NoteComposer'
 import { downloadAll } from './downloadAll'
-import { fileIcon, fileLabel } from './fileTypes'
+import { fileIcon, fileLabel, isImage } from './fileTypes'
 import './NoteCard.css'
 
 type Props = {
@@ -75,7 +75,9 @@ export function NoteCard({ author, text, attachments, time, onSave, onDelete }: 
           {attachments.map((a) => (
             <Tooltip key={a.id} content={fileLabel(a.name, a.size)} portal>
               <a className="note-card__file" href={a.url} download={a.name} aria-label={`Download ${a.name}`}>
-                <img className="note-card__file-icon" src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />
+                {isImage(a.name, a.mime)
+                  ? <img className="note-card__file-icon note-card__file-preview" src={a.url} alt="" />
+                  : <img className="note-card__file-icon" src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />}
                 <span className="note-card__file-download"><Icon name="download" size={16} /></span>
               </a>
             </Tooltip>

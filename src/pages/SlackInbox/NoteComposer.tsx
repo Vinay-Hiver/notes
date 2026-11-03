@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { Button } from '../../components/Button'
 import { Tooltip } from '../../components/Tooltip'
 import { Icon } from '../../icons'
-import { MAX_FILES, fileIcon, fileLabel } from './fileTypes'
+import { MAX_FILES, fileIcon, fileLabel, isImage } from './fileTypes'
 import './NoteComposer.css'
 
 /** An attached file. `url` is a local link to the file, used to download it from a saved note. */
@@ -86,7 +86,9 @@ export function NoteComposer({ text, onTextChange, attachments, onAttach, onRemo
               return (
                 <Tooltip key={a.id} content={`${fileLabel(a.name, a.size)}${state}`} portal>
                   <div className={`note-composer__file note-composer__file--${a.status}`} tabIndex={0}>
-                    <img className="note-composer__file-icon" src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />
+                    {isImage(a.name, a.mime)
+                      ? <img className="note-composer__file-icon note-composer__file-preview" src={a.url} alt="" />
+                      : <img className="note-composer__file-icon" src={fileIcon(a.name, a.mime)} width="30" height="30" alt="" />}
                     {a.status === 'uploading' && <span className="note-composer__progress" role="progressbar" aria-label={`Uploading ${a.name}`} aria-valuenow={Math.round(a.progress)}><span style={{ width: `${a.progress}%` }} /></span>}
                     <button type="button" className="note-composer__remove" aria-label={`Remove ${a.name}`} onClick={() => onRemoveAttachment(a.id)}>
                       <Icon name="close" size={14} />
